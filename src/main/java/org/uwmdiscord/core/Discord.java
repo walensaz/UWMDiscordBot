@@ -2,7 +2,7 @@ package org.uwmdiscord.core;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import org.uwmdiscord.core.annotations.BotInitializedEvent;
+import org.uwmdiscord.core.publishers.events.BotInitializedEvent;
 import org.uwmdiscord.core.logging.Logger;
 import org.uwmdiscord.core.module.EventBus;
 

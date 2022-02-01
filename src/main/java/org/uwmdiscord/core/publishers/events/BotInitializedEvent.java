@@ -1,4 +1,4 @@
-package org.uwmdiscord.core.annotations;
+package org.uwmdiscord.core.publishers.events;
 
 import net.dv8tion.jda.api.JDA;
 

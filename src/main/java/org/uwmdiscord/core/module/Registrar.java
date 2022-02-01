@@ -26,11 +26,11 @@ public class Registrar {
         // Get a File object for the package
         URL url = Registrar.class.getResource(name);
         File directory = new File(url.toURI());
-        Logger.debug(directory.getAbsolutePath());
+        Logger.deepDebug(directory.getAbsolutePath());
         if (directory.exists()) {
             List<File> allFiles = getFilesInDirectory(directory);
             return allFiles.stream().map(file -> {
-                Logger.debug(file.getAbsolutePath());
+                Logger.deepDebug(file.getAbsolutePath());
                 String path = packageName + file.getAbsolutePath().replace("\\", ".").split(packageName)[1];
                 path = path.substring(0, path.length() - ".class".length());
                 return path;
@@ -76,7 +76,7 @@ public class Registrar {
         ArrayList<String> commandClassNames = getClassNames();
         return commandClassNames.stream().map(className -> {
             try {
-                Logger.debug("Got class " + className);
+                Logger.deepDebug("Got class " + className);
                 return Class.forName(className);
             } catch (ClassNotFoundException e) {
                 Logger.warning("Class: " + className + " does not exist, not loading.");

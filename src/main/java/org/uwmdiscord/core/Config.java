@@ -7,5 +7,8 @@ public class Config {
     //Never push your own token...
     public static String TOKEN = "";
 
+    public static String COMMAND_PREFIX = "!";
+
+    public final static int THREAD_POOL_SIZE = 200;
 
 }

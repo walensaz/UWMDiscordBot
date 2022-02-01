@@ -1,7 +1,11 @@
 package org.uwmdiscord.core.module;
 
-import org.uwmdiscord.core.annotations.UWMListener;
+import net.dv8tion.jda.api.requests.RestAction;
+import org.uwmdiscord.core.annotations.Command;
+import org.uwmdiscord.core.annotations.CommandHandler;
+import org.uwmdiscord.core.annotations.UWMSubscribe;
 import org.uwmdiscord.core.logging.Logger;
+import org.uwmdiscord.core.publishers.events.UWMCommandReceiveEvent;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -21,9 +25,11 @@ public class EventBus {
 
     public List<Class<?>> cachedClasses;
     public HashMap<Class<?>, List<Method>> eventMethodPublishees;
+    public HashMap<String, List<CommandHandler>> commandPublishees;
 
     public EventBus() {
         eventMethodPublishees = new HashMap<>();
+        commandPublishees = new HashMap<>();
         try {
             this.cachedClasses = Registrar.getAllClasses();
         } catch(URISyntaxException | IOException e) {
@@ -33,16 +39,41 @@ public class EventBus {
         }
         cachedClasses.stream().map(Class::getDeclaredMethods).forEach(methods -> {
             for (Method method : methods) {
-                if (method.isAnnotationPresent(UWMListener.class) && method.getParameterCount() == 1) {
+                if (method.isAnnotationPresent(UWMSubscribe.class) && method.getParameterCount() == 1) {
                     Class<?> paramType = method.getParameterTypes()[0];
                     List<Method> newList = eventMethodPublishees.getOrDefault(paramType, new ArrayList<>());
                     newList.add(method);
                     eventMethodPublishees.put(paramType, newList);
-                    Logger.debug(paramType.getSimpleName() + ": " + method.getName());
+                    Logger.deepDebug(paramType.getSimpleName() + ": " + method.getName());
                 }
             }
         });
-        eventMethodPublishees.values().forEach(methodList -> methodList.sort(Comparator.comparing(o -> o.getDeclaredAnnotation(UWMListener.class).priority())));
+        cachedClasses.stream().filter(clazz -> clazz.isAnnotationPresent(Command.class)).forEach(commandClass -> {
+            String command = commandClass.getDeclaredAnnotation(Command.class).command();
+                commandPublishees.computeIfPresent(command, (key, val) -> {
+                    try {
+                       val.add((CommandHandler) commandClass.newInstance());
+                       Logger.warning("Multiple handlers of the same command exist: " + command);
+                    } catch (InstantiationException | IllegalAccessException e) {
+                        Logger.warning(commandClass.getSimpleName() + " was not able to be instantiated, needs a default constructor?");
+                    }
+                    return val;
+                });
+                commandPublishees.computeIfAbsent(command, (key) -> {
+                    try {
+                        return new ArrayList<>(Collections.singletonList((CommandHandler)commandClass.newInstance()));
+                    } catch (InstantiationException | IllegalAccessException e) {
+                        Logger.warning(commandClass.getSimpleName() + " was not able to be instantiated, needs a default constructor?");
+                    }
+                    return new ArrayList<>();
+                });
+        });
+        eventMethodPublishees.values().forEach(methodList -> methodList.sort(Comparator.comparing(o -> o.getDeclaredAnnotation(UWMSubscribe.class).priority())));
+    }
+
+    public void publishCommand(String command, UWMCommandReceiveEvent event) {
+        commandPublishees.getOrDefault(command, new ArrayList<>()).forEach(clazz -> clazz.handle(event));
+        event.getMessageActions().forEach(RestAction::queue);
     }
 
     public void publish(Class<?> clazz, Object eventToExecute) {

@@ -7,6 +7,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface UWMListener {
+public @interface UWMSubscribe {
     EventPriority priority() default EventPriority.NORMAL;
 }

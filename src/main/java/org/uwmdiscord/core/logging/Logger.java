@@ -1,5 +1,6 @@
 package org.uwmdiscord.core.logging;
 
+import org.jetbrains.annotations.TestOnly;
 import org.uwmdiscord.core.Config;
 
 public class Logger {
@@ -33,5 +34,16 @@ public class Logger {
 
     public static void debug(String debug) {
         if (Config.IS_DEBUG) log(debug, LoggerLevel.DEBUG);
+    }
+
+    /**
+     * This debug method should only be used in the core functions.
+     * Its use is to have many debug messages for simple things that
+     * are important to the function of the entire bot.
+     * @param debug - debug message
+     */
+    @TestOnly
+    public static void deepDebug(String debug) {
+        if (false) log(debug, LoggerLevel.DEBUG);
     }
 }
